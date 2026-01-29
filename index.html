@@ -1,220 +1,108 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alpha ESS Battery Monitor</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://apis.google.com/js/api.js"></script>
-    <script src="https://accounts.google.com/gsi/client"></script>
-    <style>
-        .animate-pulse-slow { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-    </style>
 </head>
 <body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen">
     <div id="app" class="max-w-6xl mx-auto p-4">
-
-```
-    <!-- Loading Overlay -->
-    <div id="loading" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-xl p-6 flex items-center gap-3">
-            <svg class="animate-spin h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-            </svg>
-            <span id="loadingText">Loading...</span>
+        
+        <!-- Loading -->
+        <div id="loading" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-xl p-6 flex items-center gap-3">
+                <svg class="animate-spin h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                </svg>
+                <span>Loading...</span>
+            </div>
         </div>
-    </div>
 
-    <!-- Setup Panel -->
-    <div id="setupPanel" class="flex items-center justify-center min-h-screen">
-        <div class="bg-white rounded-2xl p-6 shadow-lg max-w-lg w-full">
-            <div class="flex items-center gap-3 mb-6">
-                <span class="text-2xl">🔋</span>
-                <h2 class="text-xl font-semibold text-slate-800">Alpha ESS Monitor Setup</h2>
-            </div>
-
-            <!-- Step indicator -->
-            <div class="flex items-center gap-2 mb-6">
-                <div id="step1Dot" class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold">1</div>
-                <div class="flex-1 h-1 bg-slate-200"><div id="step1Bar" class="h-full bg-blue-600 w-0 transition-all"></div></div>
-                <div id="step2Dot" class="w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-sm font-bold">2</div>
-                <div class="flex-1 h-1 bg-slate-200"><div id="step2Bar" class="h-full bg-blue-600 w-0 transition-all"></div></div>
-                <div id="step3Dot" class="w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-sm font-bold">3</div>
-            </div>
-
-            <!-- Step 1: Google Sign In -->
-            <div id="step1" class="space-y-4">
-                <h3 class="font-medium text-slate-700">Step 1: Connect Google Sheets</h3>
-                <p class="text-sm text-slate-500">Sign in with Google to store your battery data in a spreadsheet.</p>
-                
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
-                    <p class="font-medium mb-2">📋 What this does:</p>
-                    <ul class="list-disc list-inside space-y-1 text-xs">
-                        <li>Creates a Google Sheet to store your data</li>
-                        <li>Logs battery stats every time you refresh</li>
-                        <li>Lets you analyze historical data in Sheets</li>
-                    </ul>
+        <!-- Setup Panel -->
+        <div id="setupPanel" class="flex items-center justify-center min-h-screen">
+            <div class="bg-white rounded-2xl p-6 shadow-lg max-w-md w-full">
+                <div class="flex items-center gap-3 mb-6">
+                    <span class="text-2xl">🔋</span>
+                    <h2 class="text-xl font-semibold text-slate-800">Alpha ESS Monitor</h2>
                 </div>
-                
-                <button onclick="signInWithGoogle()" 
-                        class="w-full bg-white border border-slate-300 text-slate-700 py-3 px-4 rounded-lg hover:bg-slate-50 transition-colors flex items-center justify-center gap-3">
-                    <img src="https://www.google.com/favicon.ico" class="w-5 h-5">
-                    Sign in with Google
-                </button>
-                
-                <button onclick="skipGoogleSetup()"
-                        class="w-full text-slate-500 text-sm hover:text-slate-700">
-                    Skip (use without Google Sheets)
-                </button>
-            </div>
 
-            <!-- Step 2: Google Sheet Setup -->
-            <div id="step2" class="hidden space-y-4">
-                <h3 class="font-medium text-slate-700">Step 2: Setup Spreadsheet</h3>
-                <p class="text-sm text-slate-500">Choose where to store your data.</p>
-                
-                <div id="googleUser" class="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-                    <img id="userPhoto" class="w-10 h-10 rounded-full" src="">
-                    <div>
-                        <div id="userName" class="font-medium text-slate-800"></div>
-                        <div id="userEmail" class="text-sm text-slate-500"></div>
+                <div class="space-y-4">
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
+                        <p class="font-medium mb-2">📋 Enter your Google Apps Script URL:</p>
+                        <p class="text-xs">This is the URL you got after deploying your script.</p>
                     </div>
-                    <button onclick="signOut()" class="ml-auto text-sm text-red-600 hover:text-red-700">Sign out</button>
-                </div>
-                
-                <div class="space-y-3">
-                    <button onclick="createNewSheet()"
-                            class="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-colors">
-                        📊 Create New Spreadsheet
-                    </button>
-                    
-                    <div class="text-center text-slate-400 text-sm">or</div>
                     
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Use Existing Sheet ID</label>
-                        <div class="flex gap-2">
-                            <input type="text" id="existingSheetId" placeholder="Spreadsheet ID from URL"
-                                   class="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm">
-                            <button onclick="useExistingSheet()"
-                                    class="px-4 py-2 bg-slate-100 rounded-lg hover:bg-slate-200 text-sm">
-                                Use
-                            </button>
-                        </div>
-                        <p class="text-xs text-slate-400 mt-1">Find ID in sheet URL: docs.google.com/spreadsheets/d/<strong>[ID]</strong>/edit</p>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Google Apps Script URL</label>
+                        <input type="text" id="scriptUrl" 
+                               placeholder="https://script.google.com/macros/s/.../exec"
+                               class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
                     </div>
-                </div>
-                
-                <button onclick="goToStep(1)" class="text-slate-500 text-sm hover:text-slate-700">← Back</button>
-            </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">App ID</label>
+                        <input type="text" id="appId" placeholder="Your Alpha ESS App ID"
+                               class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">App Secret</label>
+                        <input type="password" id="appSecret" placeholder="Your Alpha ESS App Secret"
+                               class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                    </div>
 
-            <!-- Step 3: Alpha ESS Credentials -->
-            <div id="step3" class="hidden space-y-4">
-                <h3 class="font-medium text-slate-700">Step 3: Alpha ESS API Credentials</h3>
-                <p class="text-sm text-slate-500">Enter your credentials from <a href="https://open.alphaess.com" target="_blank" class="text-blue-600 underline">open.alphaess.com</a></p>
-                
-                <div id="sheetInfo" class="p-3 bg-green-50 rounded-lg text-sm">
-                    <span class="text-green-700">✅ Spreadsheet connected</span>
-                    <a id="sheetLink" href="#" target="_blank" class="ml-2 text-blue-600 underline">Open Sheet</a>
-                </div>
-                
-                <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
-                    <p class="font-medium mb-2">⚠️ Important: You need a proxy server</p>
-                    <p class="text-xs">Due to browser security (CORS), you need to run the Python backend server locally, OR use a free proxy service.</p>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Proxy Server URL</label>
-                    <input type="text" id="proxyUrl" value="http://localhost:5000"
-                           class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
-                           placeholder="http://localhost:5000">
-                    <p class="text-xs text-slate-400 mt-1">Run alphaess_server.py locally, or use a cloud service</p>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">App ID</label>
-                    <input type="text" id="appId" placeholder="Your AppID"
-                           class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">App Secret</label>
-                    <input type="password" id="appSecret" placeholder="Your AppSecret"
-                           class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">System S/N (optional)</label>
-                    <input type="text" id="systemSn" placeholder="Auto-detect if empty"
-                           class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
-                </div>
-                
-                <div class="flex gap-3">
-                    <button onclick="goToStep(2)" class="px-4 py-2 text-slate-500 hover:text-slate-700">← Back</button>
                     <button onclick="startMonitoring()"
-                            class="flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+                            class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors">
                         🚀 Start Monitoring
                     </button>
+                    
+                    <button onclick="startDemo()"
+                            class="w-full bg-slate-100 text-slate-600 py-2 px-4 rounded-lg hover:bg-slate-200 transition-colors text-sm">
+                        Try Demo Mode
+                    </button>
                 </div>
-                
-                <button onclick="startDemo()"
-                        class="w-full text-slate-500 text-sm hover:text-slate-700">
-                    Try Demo Mode (no API needed)
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Dashboard -->
-    <div id="dashboard" class="hidden">
-        <!-- Header -->
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-            <div>
-                <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                    🔋 Alpha ESS Monitor
-                    <span id="demoTag" class="hidden text-sm bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded">Demo</span>
-                </h1>
-                <p class="text-slate-500 text-sm" id="systemInfoText">Loading...</p>
-            </div>
-            <div class="flex flex-wrap items-center gap-3">
-                <a id="openSheetBtn" href="#" target="_blank" class="hidden px-3 py-2 bg-green-100 text-green-700 rounded-lg text-sm hover:bg-green-200">
-                    📊 Open Sheet
-                </a>
-                <input type="date" id="dateSelector" class="px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white">
-                <button onclick="toggleAutoRefresh()" id="autoRefreshBtn"
-                        class="p-2 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200" title="Auto-refresh (5 min)">
-                    🔄
-                </button>
-                <button onclick="fetchAndLog()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                    ↻ Refresh
-                </button>
-                <button onclick="showSetup()" class="p-2 bg-slate-100 rounded-lg hover:bg-slate-200">⚙️</button>
             </div>
         </div>
 
-        <!-- Error Alert -->
-        <div id="errorAlert" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4"></div>
+        <!-- Dashboard -->
+        <div id="dashboard" class="hidden">
+            <!-- Header -->
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-800">🔋 Alpha ESS Monitor</h1>
+                    <p class="text-slate-500 text-sm" id="systemInfo">Loading...</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="fetchData()" id="refreshBtn"
+                            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                        ↻ Refresh
+                    </button>
+                    <button onclick="showSetup()"
+                            class="p-2 bg-slate-100 rounded-lg hover:bg-slate-200">⚙️</button>
+                </div>
+            </div>
 
-        <!-- Last Update -->
-        <div id="lastUpdate" class="hidden text-sm text-slate-500 mb-4">
-            ✅ Last updated: <span id="lastUpdateTime"></span>
-            <span id="sheetLogged" class="hidden ml-2 text-green-600">| Logged to Sheets ✓</span>
-        </div>
+            <!-- Error -->
+            <div id="errorBox" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4"></div>
+            
+            <!-- Last Update -->
+            <div id="lastUpdate" class="text-sm text-slate-500 mb-4"></div>
 
-        <!-- Main Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- Power Flow -->
-            <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 text-white">
+            <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 text-white mb-6">
                 <h3 class="text-lg font-semibold mb-6 text-center">Live Power Flow</h3>
                 <div class="grid grid-cols-3 gap-4 items-center">
+                    <!-- Solar -->
                     <div class="text-center">
-                        <div class="bg-yellow-500/20 rounded-xl p-4 mb-2">
+                        <div class="bg-yellow-500/20 rounded-xl p-4">
                             <div class="text-3xl mb-2">☀️</div>
-                            <div class="text-2xl font-bold text-yellow-400" id="solarPower">0.00</div>
+                            <div class="text-2xl font-bold text-yellow-400" id="pvPower">0.00</div>
                             <div class="text-xs text-slate-400">kW Solar</div>
                         </div>
                     </div>
+                    <!-- Home + Battery -->
                     <div class="space-y-4">
                         <div class="bg-blue-500/20 rounded-xl p-4 text-center">
                             <div class="text-3xl mb-2">🏠</div>
@@ -223,627 +111,312 @@
                         </div>
                         <div class="bg-green-500/20 rounded-xl p-4 text-center">
                             <div class="text-3xl mb-2">🔋</div>
-                            <div class="text-2xl font-bold text-green-400" id="batterySoc">0%</div>
-                            <div id="batteryStatus" class="text-sm text-green-400">-- kW</div>
-                            <div class="mt-2 w-full h-2 bg-slate-700 rounded-full overflow-hidden">
-                                <div id="batteryBar" class="h-full bg-green-500 transition-all" style="width:0%"></div>
+                            <div class="text-2xl font-bold text-green-400" id="soc">0%</div>
+                            <div class="text-sm" id="batStatus">--</div>
+                            <div class="mt-2 w-full h-2 bg-slate-700 rounded-full">
+                                <div id="socBar" class="h-full bg-green-500 rounded-full transition-all" style="width:0%"></div>
                             </div>
                         </div>
                     </div>
+                    <!-- Grid -->
                     <div class="text-center">
                         <div id="gridBox" class="bg-red-500/20 rounded-xl p-4">
                             <div class="text-3xl mb-2">⚡</div>
-                            <div class="text-2xl font-bold text-red-400" id="gridPower">0.00</div>
-                            <div class="text-xs text-slate-400" id="gridLabel">kW Import</div>
+                            <div class="text-2xl font-bold" id="gridPower">0.00</div>
+                            <div class="text-xs text-slate-400" id="gridLabel">kW Grid</div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Energy Stats -->
-            <div class="grid grid-cols-2 gap-4" id="energyStats"></div>
-        </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="energyStats"></div>
 
-        <!-- Charts -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6" id="chartsSection"></div>
-
-        <!-- Data Log Preview -->
-        <div id="dataLogSection" class="mt-6 bg-white rounded-xl p-4 shadow-sm border border-slate-200">
-            <div class="flex items-center justify-between mb-3">
-                <h3 class="text-lg font-semibold text-slate-800">Recent Data Log</h3>
-                <span class="text-sm text-slate-500" id="logCount">0 records</span>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead class="bg-slate-50">
-                        <tr>
-                            <th class="px-3 py-2 text-left">Time</th>
-                            <th class="px-3 py-2 text-right">Solar</th>
-                            <th class="px-3 py-2 text-right">Battery</th>
-                            <th class="px-3 py-2 text-right">Grid</th>
-                            <th class="px-3 py-2 text-right">Load</th>
-                            <th class="px-3 py-2 text-right">SOC</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dataLogBody"></tbody>
-                </table>
+            <!-- Data Table -->
+            <div class="bg-white rounded-xl p-4 shadow-sm">
+                <h3 class="font-semibold text-slate-800 mb-3">Session Log</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-3 py-2 text-left">Time</th>
+                                <th class="px-3 py-2 text-right">Solar</th>
+                                <th class="px-3 py-2 text-right">Battery</th>
+                                <th class="px-3 py-2 text-right">Grid</th>
+                                <th class="px-3 py-2 text-right">Load</th>
+                                <th class="px-3 py-2 text-right">SOC</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logTable"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-    // ============================================================
-    // Configuration
-    // ============================================================
-    
-    // Google API - You need to create your own project at console.cloud.google.com
-    // 1. Create a project
-    // 2. Enable Google Sheets API
-    // 3. Create OAuth 2.0 credentials (Web application)
-    // 4. Add your GitHub Pages URL to authorized origins
-    const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com'; // Replace this!
-    const GOOGLE_API_KEY = 'YOUR_GOOGLE_API_KEY'; // Replace this!
-    const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
+    <script>
+        // State
+        let config = { scriptUrl: '', appId: '', appSecret: '' };
+        let isDemo = false;
+        let logs = [];
 
-    // State
-    let config = {
-        proxyUrl: 'http://localhost:5000',
-        appId: '',
-        appSecret: '',
-        systemSn: '',
-        spreadsheetId: '',
-        useSheets: false
-    };
-    let tokenClient;
-    let gapiInited = false;
-    let gisInited = false;
-    let isDemo = false;
-    let autoRefresh = false;
-    let refreshInterval = null;
-    let dataLog = [];
+        // Load saved config
+        window.onload = function() {
+            const saved = localStorage.getItem('alphaess_config');
+            if (saved) {
+                config = JSON.parse(saved);
+                document.getElementById('scriptUrl').value = config.scriptUrl || '';
+                document.getElementById('appId').value = config.appId || '';
+                document.getElementById('appSecret').value = config.appSecret || '';
+            }
+        };
 
-    // ============================================================
-    // Initialization
-    // ============================================================
-
-    document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('dateSelector').value = new Date().toISOString().split('T')[0];
-        loadConfig();
-        
-        // Check if Google APIs are configured
-        if (GOOGLE_CLIENT_ID.includes('YOUR_')) {
-            console.warn('Google API not configured. Sheets integration disabled.');
-            document.getElementById('step1').innerHTML = `
-                <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800 mb-4">
-                    <p class="font-medium">⚠️ Google Sheets not configured</p>
-                    <p class="text-xs mt-1">To enable Sheets integration, you need to set up Google Cloud credentials. See the README for instructions.</p>
-                </div>
-                <button onclick="skipGoogleSetup()" class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700">
-                    Continue without Google Sheets
-                </button>
-            `;
-        } else {
-            gapiLoaded();
-            gisLoaded();
+        function showSetup() {
+            document.getElementById('dashboard').classList.add('hidden');
+            document.getElementById('setupPanel').classList.remove('hidden');
         }
-    });
 
-    function gapiLoaded() {
-        gapi.load('client', async () => {
-            await gapi.client.init({
-                apiKey: GOOGLE_API_KEY,
-                discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
-            });
-            gapiInited = true;
-            maybeEnableButtons();
-        });
-    }
-
-    function gisLoaded() {
-        tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: GOOGLE_CLIENT_ID,
-            scope: SCOPES,
-            callback: '', // Set later
-        });
-        gisInited = true;
-        maybeEnableButtons();
-    }
-
-    function maybeEnableButtons() {
-        if (gapiInited && gisInited) {
-            // Ready to use Google APIs
+        function startDemo() {
+            isDemo = true;
+            document.getElementById('setupPanel').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            document.getElementById('systemInfo').textContent = 'DEMO MODE';
+            fetchData();
         }
-    }
 
-    // ============================================================
-    // Google Authentication
-    // ============================================================
+        function startMonitoring() {
+            config.scriptUrl = document.getElementById('scriptUrl').value.trim();
+            config.appId = document.getElementById('appId').value.trim();
+            config.appSecret = document.getElementById('appSecret').value.trim();
 
-    function signInWithGoogle() {
-        tokenClient.callback = async (resp) => {
-            if (resp.error) {
-                console.error(resp);
+            if (!config.scriptUrl) {
+                alert('Please enter your Google Apps Script URL');
                 return;
             }
-            // Get user info
-            const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                headers: { Authorization: `Bearer ${gapi.client.getToken().access_token}` }
-            }).then(r => r.json());
-            
-            document.getElementById('userPhoto').src = userInfo.picture || '';
-            document.getElementById('userName').textContent = userInfo.name;
-            document.getElementById('userEmail').textContent = userInfo.email;
-            
-            goToStep(2);
-        };
-        
-        if (gapi.client.getToken() === null) {
-            tokenClient.requestAccessToken({ prompt: 'consent' });
-        } else {
-            tokenClient.requestAccessToken({ prompt: '' });
-        }
-    }
-
-    function signOut() {
-        const token = gapi.client.getToken();
-        if (token) {
-            google.accounts.oauth2.revoke(token.access_token);
-            gapi.client.setToken('');
-        }
-        goToStep(1);
-    }
-
-    function skipGoogleSetup() {
-        config.useSheets = false;
-        goToStep(3);
-    }
-
-    // ============================================================
-    // Google Sheets Operations
-    // ============================================================
-
-    async function createNewSheet() {
-        showLoading(true, 'Creating spreadsheet...');
-        try {
-            const response = await gapi.client.sheets.spreadsheets.create({
-                properties: {
-                    title: `Alpha ESS Data - ${new Date().toLocaleDateString()}`
-                },
-                sheets: [{
-                    properties: { title: 'RawData' },
-                    data: [{
-                        rowData: [{
-                            values: [
-                                { userEnteredValue: { stringValue: 'Timestamp' } },
-                                { userEnteredValue: { stringValue: 'Date' } },
-                                { userEnteredValue: { stringValue: 'Time' } },
-                                { userEnteredValue: { stringValue: 'Solar (W)' } },
-                                { userEnteredValue: { stringValue: 'Battery (W)' } },
-                                { userEnteredValue: { stringValue: 'Grid (W)' } },
-                                { userEnteredValue: { stringValue: 'Load (W)' } },
-                                { userEnteredValue: { stringValue: 'SOC (%)' } },
-                                { userEnteredValue: { stringValue: 'Solar (kWh)' } },
-                                { userEnteredValue: { stringValue: 'Grid Import (kWh)' } },
-                                { userEnteredValue: { stringValue: 'Grid Export (kWh)' } },
-                                { userEnteredValue: { stringValue: 'Load (kWh)' } },
-                            ]
-                        }]
-                    }]
-                }]
-            });
-            
-            config.spreadsheetId = response.result.spreadsheetId;
-            config.useSheets = true;
-            saveConfig();
-            
-            document.getElementById('sheetLink').href = `https://docs.google.com/spreadsheets/d/${config.spreadsheetId}`;
-            goToStep(3);
-        } catch (e) {
-            alert('Error creating spreadsheet: ' + e.message);
-        } finally {
-            showLoading(false);
-        }
-    }
-
-    async function useExistingSheet() {
-        const sheetId = document.getElementById('existingSheetId').value.trim();
-        if (!sheetId) {
-            alert('Please enter a spreadsheet ID');
-            return;
-        }
-        
-        showLoading(true, 'Verifying spreadsheet...');
-        try {
-            await gapi.client.sheets.spreadsheets.get({ spreadsheetId: sheetId });
-            config.spreadsheetId = sheetId;
-            config.useSheets = true;
-            saveConfig();
-            
-            document.getElementById('sheetLink').href = `https://docs.google.com/spreadsheets/d/${config.spreadsheetId}`;
-            goToStep(3);
-        } catch (e) {
-            alert('Cannot access spreadsheet. Make sure the ID is correct and you have access.');
-        } finally {
-            showLoading(false);
-        }
-    }
-
-    async function logToSheet(data) {
-        if (!config.useSheets || !config.spreadsheetId) return false;
-        
-        try {
-            const now = new Date();
-            const row = [
-                now.toISOString(),
-                now.toLocaleDateString(),
-                now.toLocaleTimeString(),
-                data.realtime?.ppv || 0,
-                data.realtime?.pbat || 0,
-                data.realtime?.pgrid || 0,
-                data.realtime?.pload || 0,
-                data.realtime?.soc || 0,
-                data.energy?.epv || data.energy?.eToday || 0,
-                data.energy?.eInput || 0,
-                data.energy?.eOutput || 0,
-                data.energy?.eLoad || 0,
-            ];
-            
-            await gapi.client.sheets.spreadsheets.values.append({
-                spreadsheetId: config.spreadsheetId,
-                range: 'RawData!A:L',
-                valueInputOption: 'USER_ENTERED',
-                resource: { values: [row] }
-            });
-            
-            return true;
-        } catch (e) {
-            console.error('Error logging to sheet:', e);
-            return false;
-        }
-    }
-
-    // ============================================================
-    // Navigation
-    // ============================================================
-
-    function goToStep(step) {
-        document.getElementById('step1').classList.add('hidden');
-        document.getElementById('step2').classList.add('hidden');
-        document.getElementById('step3').classList.add('hidden');
-        document.getElementById(`step${step}`).classList.remove('hidden');
-        
-        // Update step indicators
-        for (let i = 1; i <= 3; i++) {
-            const dot = document.getElementById(`step${i}Dot`);
-            const bar = document.getElementById(`step${i}Bar`);
-            if (i < step) {
-                dot.className = 'w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center text-sm font-bold';
-                dot.innerHTML = '✓';
-                if (bar) bar.style.width = '100%';
-            } else if (i === step) {
-                dot.className = 'w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold';
-                dot.innerHTML = i;
-            } else {
-                dot.className = 'w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-sm font-bold';
-                dot.innerHTML = i;
+            if (!config.appId || !config.appSecret) {
+                alert('Please enter your App ID and App Secret');
+                return;
             }
+
+            localStorage.setItem('alphaess_config', JSON.stringify(config));
+            isDemo = false;
+            document.getElementById('setupPanel').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            fetchData();
         }
-    }
 
-    function showSetup() {
-        document.getElementById('dashboard').classList.add('hidden');
-        document.getElementById('setupPanel').classList.remove('hidden');
-        stopAutoRefresh();
-        goToStep(config.useSheets ? 3 : 1);
-    }
-
-    // ============================================================
-    // Monitoring
-    // ============================================================
-
-    function startMonitoring() {
-        config.proxyUrl = document.getElementById('proxyUrl').value;
-        config.appId = document.getElementById('appId').value;
-        config.appSecret = document.getElementById('appSecret').value;
-        config.systemSn = document.getElementById('systemSn').value;
-        
-        if (!config.appId || !config.appSecret) {
-            alert('Please enter your App ID and App Secret');
-            return;
-        }
-        
-        saveConfig();
-        isDemo = false;
-        
-        document.getElementById('setupPanel').classList.add('hidden');
-        document.getElementById('dashboard').classList.remove('hidden');
-        document.getElementById('demoTag').classList.add('hidden');
-        
-        if (config.useSheets && config.spreadsheetId) {
-            document.getElementById('openSheetBtn').classList.remove('hidden');
-            document.getElementById('openSheetBtn').href = `https://docs.google.com/spreadsheets/d/${config.spreadsheetId}`;
-        }
-        
-        fetchAndLog();
-    }
-
-    function startDemo() {
-        isDemo = true;
-        config.useSheets = false;
-        
-        document.getElementById('setupPanel').classList.add('hidden');
-        document.getElementById('dashboard').classList.remove('hidden');
-        document.getElementById('demoTag').classList.remove('hidden');
-        document.getElementById('openSheetBtn').classList.add('hidden');
-        
-        fetchAndLog();
-    }
-
-    // ============================================================
-    // Data Fetching
-    // ============================================================
-
-    function generateDemoData() {
-        const hour = new Date().getHours();
-        const solarMult = hour >= 6 && hour <= 18 ? Math.sin((hour - 6) * Math.PI / 12) : 0;
-        
-        return {
-            systems: [{ sysSn: 'DEMO-001', popv: 6.6, minv: 'Alpha-SMILE5', mbat: 'SMILE-BAT-10.1P' }],
-            realtime: {
-                ppv: Math.round(5000 * solarMult * (0.8 + Math.random() * 0.4)),
-                pbat: Math.round(-2000 + Math.random() * 4000),
-                soc: Math.round(20 + Math.random() * 60),
-                pgrid: Math.round(-1500 + Math.random() * 3000),
-                pload: Math.round(500 + Math.random() * 2500),
-            },
-            energy: {
-                epv: (3 + Math.random() * 15).toFixed(2),
-                eCharge: (2 + Math.random() * 8).toFixed(2),
-                eDischarge: (3 + Math.random() * 10).toFixed(2),
-                eInput: (1 + Math.random() * 5).toFixed(2),
-                eOutput: (2 + Math.random() * 8).toFixed(2),
-                eLoad: (8 + Math.random() * 12).toFixed(2),
-            },
-            power: Array.from({ length: 288 }, (_, i) => {
-                const h = Math.floor(i / 12);
-                return {
-                    uploadTime: `${h.toString().padStart(2,'0')}:${((i%12)*5).toString().padStart(2,'0')}`,
-                    ppv: Math.round(h >= 6 && h <= 18 ? 5000 * Math.sin((h - 6) * Math.PI / 12) * (0.7 + Math.random() * 0.3) : 0),
-                    pbat: Math.round(-1500 + Math.random() * 3000),
-                    pgrid: Math.round(-1000 + Math.random() * 2000),
-                    pload: Math.round(400 + Math.random() * 2000),
-                    soc: Math.round(20 + h * 2.5 + Math.random() * 10),
-                };
-            })
-        };
-    }
-
-    async function fetchAndLog() {
-        showLoading(true, 'Fetching data...');
-        hideError();
-        
-        try {
-            let data;
-            
-            if (isDemo) {
-                await new Promise(r => setTimeout(r, 500));
-                data = { success: true, data: generateDemoData() };
-            } else {
-                const response = await fetch(`${config.proxyUrl}/api/all`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        appId: config.appId,
-                        appSecret: config.appSecret,
-                        sysSn: config.systemSn || undefined,
-                        queryDate: document.getElementById('dateSelector').value
-                    })
-                });
-                data = await response.json();
-            }
-            
-            if (data.success) {
-                updateDashboard(data.data);
-                
-                // Log to Google Sheets
-                let logged = false;
-                if (config.useSheets && !isDemo) {
-                    showLoading(true, 'Logging to Sheets...');
-                    logged = await logToSheet(data.data);
+        function generateDemoData() {
+            const hour = new Date().getHours();
+            const solar = hour >= 6 && hour <= 18 ? Math.sin((hour-6)*Math.PI/12) * 5000 : 0;
+            return {
+                success: true,
+                data: {
+                    systems: [{ sysSn: 'DEMO-001' }],
+                    realtime: {
+                        ppv: Math.round(solar * (0.8 + Math.random()*0.4)),
+                        pbat: Math.round(-2000 + Math.random()*4000),
+                        soc: Math.round(30 + Math.random()*50),
+                        pgrid: Math.round(-1500 + Math.random()*3000),
+                        pload: Math.round(500 + Math.random()*2000)
+                    },
+                    energy: {
+                        epv: (5 + Math.random()*10).toFixed(1),
+                        eCharge: (2 + Math.random()*5).toFixed(1),
+                        eDischarge: (3 + Math.random()*6).toFixed(1),
+                        eInput: (1 + Math.random()*3).toFixed(1),
+                        eOutput: (2 + Math.random()*4).toFixed(1),
+                        eLoad: (8 + Math.random()*8).toFixed(1)
+                    }
                 }
+            };
+        }
+
+        async function fetchData() {
+            showLoading(true);
+            hideError();
+
+            try {
+                let result;
                 
-                // Update local log
-                addToLocalLog(data.data);
-                
-                // Update UI
-                document.getElementById('lastUpdate').classList.remove('hidden');
-                document.getElementById('lastUpdateTime').textContent = new Date().toLocaleTimeString();
-                document.getElementById('sheetLogged').classList.toggle('hidden', !logged);
-            } else {
-                showError(data.error || 'Failed to fetch data');
+                if (isDemo) {
+                    await new Promise(r => setTimeout(r, 500));
+                    result = generateDemoData();
+                } else {
+                    // Use Google Apps Script with URL parameters (no CORS issues)
+                    const url = new URL(config.scriptUrl);
+                    
+                    // Create a form and submit it via iframe to avoid CORS
+                    result = await callGoogleScript(config.scriptUrl, {
+                        action: 'all',
+                        appId: config.appId,
+                        appSecret: config.appSecret
+                    });
+                }
+
+                if (result && result.success) {
+                    updateDashboard(result.data);
+                    addLog(result.data.realtime);
+                    document.getElementById('lastUpdate').textContent = 
+                        '✅ Updated: ' + new Date().toLocaleTimeString();
+                } else {
+                    showError(result?.error || 'Failed to get data');
+                }
+            } catch (err) {
+                showError('Error: ' + err.message);
+            } finally {
+                showLoading(false);
             }
-        } catch (e) {
-            showError(`Connection error: ${e.message}. Is the proxy server running?`);
-        } finally {
-            showLoading(false);
         }
-    }
 
-    function addToLocalLog(data) {
-        const entry = {
-            time: new Date().toLocaleTimeString(),
-            solar: data.realtime?.ppv || 0,
-            battery: data.realtime?.pbat || 0,
-            grid: data.realtime?.pgrid || 0,
-            load: data.realtime?.pload || 0,
-            soc: data.realtime?.soc || 0
-        };
-        
-        dataLog.unshift(entry);
-        if (dataLog.length > 20) dataLog.pop();
-        
-        updateLogTable();
-    }
-
-    function updateLogTable() {
-        const tbody = document.getElementById('dataLogBody');
-        tbody.innerHTML = dataLog.slice(0, 10).map(d => `
-            <tr class="border-t border-slate-100">
-                <td class="px-3 py-2">${d.time}</td>
-                <td class="px-3 py-2 text-right text-yellow-600">${(d.solar/1000).toFixed(2)} kW</td>
-                <td class="px-3 py-2 text-right ${d.battery < 0 ? 'text-green-600' : 'text-orange-600'}">${(d.battery/1000).toFixed(2)} kW</td>
-                <td class="px-3 py-2 text-right ${d.grid < 0 ? 'text-green-600' : 'text-red-600'}">${(d.grid/1000).toFixed(2)} kW</td>
-                <td class="px-3 py-2 text-right text-blue-600">${(d.load/1000).toFixed(2)} kW</td>
-                <td class="px-3 py-2 text-right">${d.soc}%</td>
-            </tr>
-        `).join('');
-        
-        document.getElementById('logCount').textContent = `${dataLog.length} records this session`;
-    }
-
-    // ============================================================
-    // Dashboard Update
-    // ============================================================
-
-    function updateDashboard(data) {
-        // System info
-        if (data.systems?.[0]) {
-            document.getElementById('systemInfoText').textContent = data.systems[0].sysSn;
+        // Call Google Apps Script using JSONP-style approach
+        function callGoogleScript(url, data) {
+            return new Promise((resolve, reject) => {
+                // Create unique callback name
+                const callbackName = 'callback_' + Date.now();
+                
+                // For Google Apps Script, we'll use fetch with no-cors and handle the response
+                // But since that won't give us data, let's try a different approach
+                
+                // Actually, let's use the google.script.run style or just fetch
+                fetch(url, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'text/plain',
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(() => {
+                    // no-cors doesn't return data, so we need another approach
+                    // Let's try redirect method
+                    return fetchViaForm(url, data);
+                })
+                .then(resolve)
+                .catch(reject);
+            });
         }
-        
-        // Realtime power
-        if (data.realtime) {
-            const rt = data.realtime;
-            document.getElementById('solarPower').textContent = (rt.ppv / 1000).toFixed(2);
-            document.getElementById('loadPower').textContent = (rt.pload / 1000).toFixed(2);
-            document.getElementById('batterySoc').textContent = `${rt.soc}%`;
-            document.getElementById('batteryBar').style.width = `${rt.soc}%`;
-            document.getElementById('batteryBar').className = `h-full transition-all ${rt.soc > 20 ? 'bg-green-500' : 'bg-red-500'}`;
-            
-            const isCharging = rt.pbat < 0;
-            document.getElementById('batteryStatus').textContent = `${isCharging ? '⚡' : '🔋'} ${Math.abs(rt.pbat / 1000).toFixed(2)} kW`;
-            document.getElementById('batteryStatus').className = `text-sm ${isCharging ? 'text-green-400' : 'text-orange-400'}`;
-            
-            const isExporting = rt.pgrid < 0;
-            document.getElementById('gridPower').textContent = Math.abs(rt.pgrid / 1000).toFixed(2);
-            document.getElementById('gridPower').className = `text-2xl font-bold ${isExporting ? 'text-green-400' : 'text-red-400'}`;
-            document.getElementById('gridLabel').textContent = `kW ${isExporting ? 'Export' : 'Import'}`;
-            document.getElementById('gridBox').className = `${isExporting ? 'bg-green-500/20' : 'bg-red-500/20'} rounded-xl p-4`;
+
+        // Fetch via hidden form/iframe approach
+        function fetchViaForm(url, data) {
+            return new Promise((resolve, reject) => {
+                // For simplicity, let's use a GET request with URL params
+                // This works better with Google Apps Script
+                
+                const params = new URLSearchParams();
+                params.append('data', JSON.stringify(data));
+                
+                const fullUrl = url + '?data=' + encodeURIComponent(JSON.stringify(data));
+                
+                // Create script tag for JSONP-like behavior
+                const script = document.createElement('script');
+                const callbackName = 'jsonpCallback_' + Date.now();
+                
+                window[callbackName] = function(response) {
+                    delete window[callbackName];
+                    document.body.removeChild(script);
+                    resolve(response);
+                };
+                
+                // Actually, Google Apps Script doesn't support JSONP
+                // Let's try opening in a new way using an iframe
+                
+                // Simplest: just use fetch and hope for the best
+                fetch(url, {
+                    method: 'POST',
+                    body: JSON.stringify(data),
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    }
+                })
+                .then(response => response.json())
+                .then(resolve)
+                .catch(reject);
+            });
         }
-        
-        // Energy stats
-        if (data.energy) {
-            const e = data.energy;
-            const stats = [
-                { title: 'Solar Today', value: e.epv || e.eToday || '0', icon: '☀️' },
-                { title: 'Battery In', value: e.eCharge || '0', icon: '🔋' },
-                { title: 'Battery Out', value: e.eDischarge || '0', icon: '🔋' },
-                { title: 'Grid Import', value: e.eInput || '0', icon: '⚡' },
-                { title: 'Grid Export', value: e.eOutput || '0', icon: '⚡' },
-                { title: 'Load', value: e.eLoad || '0', icon: '🏠' },
-            ];
-            
-            document.getElementById('energyStats').innerHTML = stats.map(s => `
-                <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-slate-500 text-sm">${s.title}</span>
-                        <span>${s.icon}</span>
+
+        function updateDashboard(data) {
+            if (data.systems && data.systems[0]) {
+                document.getElementById('systemInfo').textContent = data.systems[0].sysSn;
+            }
+
+            if (data.realtime) {
+                const r = data.realtime;
+                document.getElementById('pvPower').textContent = (r.ppv/1000).toFixed(2);
+                document.getElementById('loadPower').textContent = (r.pload/1000).toFixed(2);
+                document.getElementById('soc').textContent = r.soc + '%';
+                document.getElementById('socBar').style.width = r.soc + '%';
+                
+                const charging = r.pbat < 0;
+                document.getElementById('batStatus').textContent = 
+                    (charging ? '⚡ Charging ' : '🔋 Discharging ') + Math.abs(r.pbat/1000).toFixed(2) + ' kW';
+                document.getElementById('batStatus').className = 
+                    'text-sm ' + (charging ? 'text-green-400' : 'text-orange-400');
+
+                const exporting = r.pgrid < 0;
+                document.getElementById('gridPower').textContent = Math.abs(r.pgrid/1000).toFixed(2);
+                document.getElementById('gridPower').className = 
+                    'text-2xl font-bold ' + (exporting ? 'text-green-400' : 'text-red-400');
+                document.getElementById('gridLabel').textContent = 'kW ' + (exporting ? 'Export' : 'Import');
+                document.getElementById('gridBox').className = 
+                    (exporting ? 'bg-green-500/20' : 'bg-red-500/20') + ' rounded-xl p-4';
+            }
+
+            if (data.energy) {
+                const e = data.energy;
+                const stats = [
+                    { label: 'Solar', value: e.epv || e.eToday || 0, icon: '☀️' },
+                    { label: 'Bat In', value: e.eCharge || 0, icon: '🔋' },
+                    { label: 'Bat Out', value: e.eDischarge || 0, icon: '🔋' },
+                    { label: 'Grid In', value: e.eInput || 0, icon: '⬇️' },
+                    { label: 'Grid Out', value: e.eOutput || 0, icon: '⬆️' },
+                    { label: 'Load', value: e.eLoad || 0, icon: '🏠' }
+                ];
+                document.getElementById('energyStats').innerHTML = stats.map(s => `
+                    <div class="bg-white rounded-xl p-4 shadow-sm">
+                        <div class="text-slate-500 text-sm">${s.icon} ${s.label}</div>
+                        <div class="text-xl font-bold text-slate-800">${s.value} <span class="text-sm text-slate-400">kWh</span></div>
                     </div>
-                    <div class="text-2xl font-bold text-slate-800">${s.value} <span class="text-sm text-slate-400">kWh</span></div>
-                </div>
+                `).join('');
+            }
+        }
+
+        function addLog(realtime) {
+            if (!realtime) return;
+            logs.unshift({
+                time: new Date().toLocaleTimeString(),
+                ppv: realtime.ppv || 0,
+                pbat: realtime.pbat || 0,
+                pgrid: realtime.pgrid || 0,
+                pload: realtime.pload || 0,
+                soc: realtime.soc || 0
+            });
+            if (logs.length > 10) logs.pop();
+            
+            document.getElementById('logTable').innerHTML = logs.map(l => `
+                <tr class="border-t">
+                    <td class="px-3 py-2">${l.time}</td>
+                    <td class="px-3 py-2 text-right text-yellow-600">${(l.ppv/1000).toFixed(2)}</td>
+                    <td class="px-3 py-2 text-right ${l.pbat < 0 ? 'text-green-600' : 'text-orange-600'}">${(l.pbat/1000).toFixed(2)}</td>
+                    <td class="px-3 py-2 text-right ${l.pgrid < 0 ? 'text-green-600' : 'text-red-600'}">${(l.pgrid/1000).toFixed(2)}</td>
+                    <td class="px-3 py-2 text-right text-blue-600">${(l.pload/1000).toFixed(2)}</td>
+                    <td class="px-3 py-2 text-right">${l.soc}%</td>
+                </tr>
             `).join('');
         }
-        
-        // Charts
-        if (data.power?.length > 0) {
-            const charts = [
-                { key: 'ppv', title: '☀️ Solar', color: 'bg-yellow-400' },
-                { key: 'pbat', title: '🔋 Battery', color: 'bg-green-400' },
-                { key: 'pgrid', title: '⚡ Grid', color: 'bg-blue-400' },
-                { key: 'pload', title: '🏠 Load', color: 'bg-purple-400' },
-            ];
-            
-            document.getElementById('chartsSection').innerHTML = charts.map(c => {
-                const sampled = data.power.filter((_, i) => i % 12 === 0);
-                const maxVal = Math.max(...sampled.map(d => Math.abs(d[c.key] || 0))) || 1;
-                
-                const bars = sampled.map(d => {
-                    const val = d[c.key] || 0;
-                    const height = Math.abs(val) / maxVal * 100;
-                    return `<div class="flex-1 min-w-[4px]" style="height:${Math.max(height,2)}%"
-                                 class="${val < 0 ? 'bg-red-400' : c.color} rounded-t"></div>`;
-                }).join('');
-                
-                return `<div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
-                    <h4 class="text-sm font-medium text-slate-700 mb-3">${c.title} (24h)</h4>
-                    <div class="flex items-end gap-0.5 h-24">${bars}</div>
-                </div>`;
-            }).join('');
+
+        function showLoading(show) {
+            document.getElementById('loading').classList.toggle('hidden', !show);
         }
-    }
 
-    // ============================================================
-    // Auto Refresh
-    // ============================================================
-
-    function toggleAutoRefresh() {
-        autoRefresh = !autoRefresh;
-        const btn = document.getElementById('autoRefreshBtn');
-        
-        if (autoRefresh) {
-            btn.classList.remove('bg-slate-100', 'text-slate-600');
-            btn.classList.add('bg-green-100', 'text-green-600');
-            refreshInterval = setInterval(fetchAndLog, 5 * 60 * 1000); // 5 minutes
-        } else {
-            stopAutoRefresh();
+        function showError(msg) {
+            const box = document.getElementById('errorBox');
+            box.textContent = '❌ ' + msg;
+            box.classList.remove('hidden');
         }
-    }
 
-    function stopAutoRefresh() {
-        autoRefresh = false;
-        document.getElementById('autoRefreshBtn').classList.remove('bg-green-100', 'text-green-600');
-        document.getElementById('autoRefreshBtn').classList.add('bg-slate-100', 'text-slate-600');
-        if (refreshInterval) clearInterval(refreshInterval);
-    }
-
-    // ============================================================
-    // Utilities
-    // ============================================================
-
-    function showLoading(show, text = 'Loading...') {
-        document.getElementById('loading').classList.toggle('hidden', !show);
-        document.getElementById('loadingText').textContent = text;
-    }
-
-    function showError(msg) {
-        document.getElementById('errorAlert').classList.remove('hidden');
-        document.getElementById('errorAlert').textContent = '❌ ' + msg;
-    }
-
-    function hideError() {
-        document.getElementById('errorAlert').classList.add('hidden');
-    }
-
-    function saveConfig() {
-        localStorage.setItem('alphaess_config', JSON.stringify(config));
-    }
-
-    function loadConfig() {
-        const saved = localStorage.getItem('alphaess_config');
-        if (saved) {
-            config = { ...config, ...JSON.parse(saved) };
-            document.getElementById('proxyUrl').value = config.proxyUrl;
-            document.getElementById('appId').value = config.appId;
-            document.getElementById('appSecret').value = config.appSecret;
-            document.getElementById('systemSn').value = config.systemSn;
-            if (config.spreadsheetId) {
-                document.getElementById('existingSheetId').value = config.spreadsheetId;
-            }
+        function hideError() {
+            document.getElementById('errorBox').classList.add('hidden');
         }
-    }
-</script>
-```
-
+    </script>
 </body>
 </html>
