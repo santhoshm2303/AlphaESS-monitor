@@ -545,6 +545,9 @@
                 
                 // Update charts with historical data
                 if (historyResult && historyResult.success && historyResult.data) {
+                    console.log('History records:', historyResult.data.length);
+                    console.log('First record:', historyResult.data[0]);
+                    console.log('Last record:', historyResult.data[historyResult.data.length - 1]);
                     updateChartsWithHistory(historyResult.data);
                 }
             } catch (e) {
