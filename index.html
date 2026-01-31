@@ -520,22 +520,28 @@
                 if (isDemo) {
                     await new Promise(r => setTimeout(r, 800));
                     result = generateDemoData();
+                    historyResult = { success: true, data: result.data.historical };
                 } else {
                     // Get real-time data
+                    console.log('Fetching real-time data...');
                     const response = await fetch(scriptUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'text/plain' },
                         body: JSON.stringify({ action: 'all' })
                     });
                     result = await response.json();
+                    console.log('Real-time result:', result);
                     
                     // Get historical data from Google Sheets
+                    console.log('Fetching historical data...');
                     const historyResponse = await fetch(scriptUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'text/plain' },
                         body: JSON.stringify({ action: 'history' })
                     });
                     historyResult = await historyResponse.json();
+                    console.log('History result:', historyResult);
+                    console.log('History records count:', historyResult.data ? historyResult.data.length : 0);
                 }
                 
                 if (result && result.success) {
@@ -544,11 +550,13 @@
                 }
                 
                 // Update charts with historical data
-                if (historyResult && historyResult.success && historyResult.data) {
-                    console.log('History records:', historyResult.data.length);
+                if (historyResult && historyResult.success && historyResult.data && historyResult.data.length > 0) {
+                    console.log('Updating charts with', historyResult.data.length, 'records');
                     console.log('First record:', historyResult.data[0]);
                     console.log('Last record:', historyResult.data[historyResult.data.length - 1]);
                     updateChartsWithHistory(historyResult.data);
+                } else {
+                    console.log('No historical data to display');
                 }
             } catch (e) {
                 console.error('Error loading data:', e);
