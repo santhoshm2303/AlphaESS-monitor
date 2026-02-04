@@ -347,8 +347,8 @@
             document.getElementById('dashboard').classList.remove('hidden');
             initCharts();
             loadData();
-            // Auto refresh every 30 seconds
-            setInterval(loadData, 30000);
+            // Auto refresh every 30 minutes (1800000 ms)
+            setInterval(loadData, 1800000);
         }
         
         // Initialize Charts
