@@ -192,106 +192,202 @@
             
             <!-- Power Flow Visualization -->
             <div class="bg-slate-800/50 backdrop-blur-xl rounded-3xl p-6 border border-slate-700/50">
-                <h2 class="text-lg font-semibold mb-6 flex items-center gap-2">
+                <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
                     <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
                     Live Power Flow
                 </h2>
                 
-                <!-- Flow Diagram -->
-                <div class="grid grid-cols-5 gap-2 items-center justify-items-center" style="min-height: 280px;">
+                <div class="relative" style="height: 350px;">
+                    <!-- SVG Lines Layer -->
+                    <svg class="absolute inset-0 w-full h-full" style="z-index: 1;">
+                        <!-- Define gradients and markers -->
+                        <defs>
+                            <!-- Animated flow pattern -->
+                            <pattern id="flowPattern" patternUnits="userSpaceOnUse" width="16" height="8">
+                                <circle r="3" fill="currentColor" opacity="0.8">
+                                    <animate attributeName="cx" from="0" to="16" dur="0.6s" repeatCount="indefinite"/>
+                                    <animate attributeName="cy" values="4;4" dur="0.6s" repeatCount="indefinite"/>
+                                </circle>
+                            </pattern>
+                            
+                            <!-- Arrow markers -->
+                            <marker id="arrowhead-yellow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#eab308"/>
+                            </marker>
+                            <marker id="arrowhead-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#22c55e"/>
+                            </marker>
+                            <marker id="arrowhead-red" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#ef4444"/>
+                            </marker>
+                            <marker id="arrowhead-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6"/>
+                            </marker>
+                        </defs>
+                        
+                        <!-- Static connection lines (always visible, dim) -->
+                        <line x1="50%" y1="85" x2="20%" y2="200" stroke="#334155" stroke-width="2" stroke-dasharray="4,4"/>
+                        <line x1="50%" y1="85" x2="50%" y2="200" stroke="#334155" stroke-width="2" stroke-dasharray="4,4"/>
+                        <line x1="50%" y1="85" x2="80%" y2="200" stroke="#334155" stroke-width="2" stroke-dasharray="4,4"/>
+                        <line x1="28%" y1="235" x2="42%" y2="235" stroke="#334155" stroke-width="2" stroke-dasharray="4,4"/>
+                        <line x1="58%" y1="235" x2="72%" y2="235" stroke="#334155" stroke-width="2" stroke-dasharray="4,4"/>
+                        
+                        <!-- Active flow lines (shown/hidden based on power flow) -->
+                        
+                        <!-- Solar to Home -->
+                        <g id="lineSolarHome" class="hidden">
+                            <line x1="50%" y1="85" x2="50%" y2="195" stroke="#eab308" stroke-width="4" marker-end="url(#arrowhead-yellow)">
+                                <animate attributeName="stroke-dasharray" values="0,1000;200,1000" dur="1s" fill="freeze"/>
+                            </line>
+                            <line x1="50%" y1="85" x2="50%" y2="195" stroke="#fde047" stroke-width="2" stroke-dasharray="8,12">
+                                <animate attributeName="stroke-dashoffset" from="20" to="0" dur="0.5s" repeatCount="indefinite"/>
+                            </line>
+                        </g>
+                        
+                        <!-- Solar to Battery -->
+                        <g id="lineSolarBattery" class="hidden">
+                            <line x1="48%" y1="85" x2="23%" y2="195" stroke="#22c55e" stroke-width="4" marker-end="url(#arrowhead-green)">
+                                <animate attributeName="stroke-dasharray" values="0,1000;200,1000" dur="1s" fill="freeze"/>
+                            </line>
+                            <line x1="48%" y1="85" x2="23%" y2="195" stroke="#4ade80" stroke-width="2" stroke-dasharray="8,12">
+                                <animate attributeName="stroke-dashoffset" from="20" to="0" dur="0.5s" repeatCount="indefinite"/>
+                            </line>
+                        </g>
+                        
+                        <!-- Solar to Grid -->
+                        <g id="lineSolarGrid" class="hidden">
+                            <line x1="52%" y1="85" x2="77%" y2="195" stroke="#22c55e" stroke-width="4" marker-end="url(#arrowhead-green)">
+                                <animate attributeName="stroke-dasharray" values="0,1000;200,1000" dur="1s" fill="freeze"/>
+                            </line>
+                            <line x1="52%" y1="85" x2="77%" y2="195" stroke="#4ade80" stroke-width="2" stroke-dasharray="8,12">
+                                <animate attributeName="stroke-dashoffset" from="20" to="0" dur="0.5s" repeatCount="indefinite"/>
+                            </line>
+                        </g>
+                        
+                        <!-- Battery to Home -->
+                        <g id="lineBatteryHome" class="hidden">
+                            <line x1="28%" y1="230" x2="42%" y2="230" stroke="#22c55e" stroke-width="4" marker-end="url(#arrowhead-green)"/>
+                            <line x1="28%" y1="230" x2="42%" y2="230" stroke="#4ade80" stroke-width="2" stroke-dasharray="6,8">
+                                <animate attributeName="stroke-dashoffset" from="14" to="0" dur="0.4s" repeatCount="indefinite"/>
+                            </line>
+                        </g>
+                        
+                        <!-- Grid to Home (Import) -->
+                        <g id="lineGridHome" class="hidden">
+                            <line x1="72%" y1="230" x2="58%" y2="230" stroke="#ef4444" stroke-width="4" marker-end="url(#arrowhead-red)"/>
+                            <line x1="72%" y1="230" x2="58%" y2="230" stroke="#f87171" stroke-width="2" stroke-dasharray="6,8">
+                                <animate attributeName="stroke-dashoffset" from="14" to="0" dur="0.4s" repeatCount="indefinite"/>
+                            </line>
+                        </g>
+                        
+                        <!-- Home to Grid (Export) -->
+                        <g id="lineHomeGrid" class="hidden">
+                            <line x1="58%" y1="240" x2="72%" y2="240" stroke="#22c55e" stroke-width="4" marker-end="url(#arrowhead-green)"/>
+                            <line x1="58%" y1="240" x2="72%" y2="240" stroke="#4ade80" stroke-width="2" stroke-dasharray="6,8">
+                                <animate attributeName="stroke-dashoffset" from="14" to="0" dur="0.4s" repeatCount="indefinite"/>
+                            </line>
+                        </g>
+                        
+                        <!-- Grid to Battery (Grid Charging) -->
+                        <g id="lineGridBattery" class="hidden">
+                            <path d="M 72% 260 Q 50% 300 28% 260" fill="none" stroke="#ef4444" stroke-width="4" marker-end="url(#arrowhead-red)"/>
+                            <path d="M 72% 260 Q 50% 300 28% 260" fill="none" stroke="#f87171" stroke-width="2" stroke-dasharray="6,8">
+                                <animate attributeName="stroke-dashoffset" from="14" to="0" dur="0.4s" repeatCount="indefinite"/>
+                            </path>
+                        </g>
+                    </svg>
                     
-                    <!-- Row 1: Solar at top center -->
-                    <div class="col-span-5 flex flex-col items-center">
-                        <div class="w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg shadow-yellow-500/30">
-                            <span class="text-3xl">☀️</span>
-                        </div>
-                        <div class="mt-2 text-lg font-bold text-yellow-400" id="flowPv">0 W</div>
-                        <div class="text-xs text-slate-400">Solar</div>
-                    </div>
-                    
-                    <!-- Row 2: Arrows from Solar -->
-                    <div class="col-span-5 flex justify-center items-center gap-8 py-2">
-                        <!-- Solar to Battery arrow -->
-                        <div id="arrowSolarBat" class="hidden flex flex-col items-center">
-                            <span class="text-green-400 text-xs font-medium" id="flowSolarBatVal">0W</span>
-                            <span class="text-green-400 text-2xl">↙️</span>
+                    <!-- Icons Layer -->
+                    <div class="absolute inset-0 flex flex-col items-center" style="z-index: 2;">
+                        
+                        <!-- Solar Panel - Top Center -->
+                        <div class="flex flex-col items-center mb-8">
+                            <div class="w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg shadow-yellow-500/40 border-2 border-yellow-300/30">
+                                <span class="text-3xl">☀️</span>
+                            </div>
+                            <div class="mt-2 text-xl font-bold text-yellow-400" id="flowPv">0 W</div>
+                            <div class="text-xs text-slate-400 font-medium">SOLAR</div>
                         </div>
                         
-                        <!-- Solar to Home arrow -->
-                        <div id="arrowSolarHome" class="hidden flex flex-col items-center">
-                            <span class="text-yellow-400 text-xs font-medium" id="flowSolarHomeVal">0W</span>
-                            <span class="text-yellow-400 text-2xl">⬇️</span>
+                        <!-- Flow Values Row -->
+                        <div class="flex justify-between w-full px-8 mb-4" style="max-width: 500px;">
+                            <div id="valSolarBat" class="hidden text-center">
+                                <span class="text-green-400 text-sm font-bold" id="flowValSolarBat">0W</span>
+                            </div>
+                            <div id="valSolarHome" class="hidden text-center">
+                                <span class="text-yellow-400 text-sm font-bold" id="flowValSolarHome">0W</span>
+                            </div>
+                            <div id="valSolarGrid" class="hidden text-center">
+                                <span class="text-green-400 text-sm font-bold" id="flowValSolarGrid">0W</span>
+                            </div>
                         </div>
                         
-                        <!-- Solar to Grid arrow -->
-                        <div id="arrowSolarGrid" class="hidden flex flex-col items-center">
-                            <span class="text-green-400 text-xs font-medium" id="flowSolarGridVal">0W</span>
-                            <span class="text-green-400 text-2xl">↘️</span>
+                        <!-- Bottom Row: Battery, Home, Grid -->
+                        <div class="flex justify-between items-start w-full px-4 mt-8" style="max-width: 600px;">
+                            
+                            <!-- Battery -->
+                            <div class="flex flex-col items-center">
+                                <div class="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/40 border-2 border-green-400/30 relative overflow-hidden">
+                                    <div id="batteryFill" class="absolute bottom-0 left-0 right-0 bg-green-400/50 transition-all duration-1000" style="height: 0%"></div>
+                                    <span class="text-3xl relative z-10">🔋</span>
+                                </div>
+                                <div class="mt-2 text-lg font-bold text-green-400" id="flowBat">0 W</div>
+                                <div class="text-xs text-slate-400 font-medium" id="flowBatLabel">BATTERY</div>
+                                <div class="text-sm font-bold text-emerald-400 mt-1" id="flowSoc">0%</div>
+                            </div>
+                            
+                            <!-- Battery-Home Flow Value -->
+                            <div class="flex flex-col items-center justify-center h-20">
+                                <div id="valBatHome" class="hidden">
+                                    <span class="text-green-400 text-xs font-bold" id="flowValBatHome">0W</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Home -->
+                            <div class="flex flex-col items-center">
+                                <div class="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/40 border-2 border-purple-400/30">
+                                    <span class="text-3xl">🏠</span>
+                                </div>
+                                <div class="mt-2 text-lg font-bold text-purple-400" id="flowLoad">0 W</div>
+                                <div class="text-xs text-slate-400 font-medium">HOME</div>
+                            </div>
+                            
+                            <!-- Home-Grid Flow Value -->
+                            <div class="flex flex-col items-center justify-center h-20">
+                                <div id="valGridHome" class="hidden">
+                                    <span class="text-red-400 text-xs font-bold" id="flowValGridHome">0W</span>
+                                </div>
+                                <div id="valHomeGrid" class="hidden">
+                                    <span class="text-green-400 text-xs font-bold" id="flowValHomeGrid">0W</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Grid -->
+                            <div class="flex flex-col items-center">
+                                <div id="gridIcon" class="w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/40 border-2 border-blue-400/30">
+                                    <span class="text-3xl">⚡</span>
+                                </div>
+                                <div class="mt-2 text-lg font-bold text-blue-400" id="flowGrid">0 W</div>
+                                <div class="text-xs text-slate-400 font-medium" id="flowGridLabel">GRID</div>
+                            </div>
                         </div>
                     </div>
-                    
-                    <!-- Row 3: Battery, Home, Grid -->
-                    <!-- Battery -->
-                    <div class="flex flex-col items-center">
-                        <div class="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/30 relative overflow-hidden">
-                            <div id="batteryFill" class="absolute bottom-0 left-0 right-0 bg-green-400/40 transition-all duration-1000" style="height: 0%"></div>
-                            <span class="text-3xl relative z-10">🔋</span>
-                        </div>
-                        <div class="mt-2 text-lg font-bold text-green-400" id="flowBat">0 W</div>
-                        <div class="text-xs text-slate-400" id="flowBatLabel">Battery</div>
-                        <div class="text-sm font-bold text-green-400" id="flowSoc">0%</div>
-                    </div>
-                    
-                    <!-- Arrow Battery <-> Home -->
-                    <div class="flex flex-col items-center justify-center h-full">
-                        <div id="arrowBatToHome" class="hidden flex items-center">
-                            <span class="text-green-400 text-2xl">➡️</span>
-                            <span class="text-green-400 text-xs ml-1" id="flowBatHomeVal">0W</span>
-                        </div>
-                        <div id="arrowHomeToBat" class="hidden flex items-center">
-                            <span class="text-orange-400 text-2xl">⬅️</span>
-                            <span class="text-orange-400 text-xs ml-1" id="flowHomeBatVal">0W</span>
-                        </div>
-                    </div>
-                    
-                    <!-- Home -->
-                    <div class="flex flex-col items-center">
-                        <div class="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/30">
-                            <span class="text-3xl">🏠</span>
-                        </div>
-                        <div class="mt-2 text-lg font-bold text-purple-400" id="flowLoad">0 W</div>
-                        <div class="text-xs text-slate-400">Home</div>
-                    </div>
-                    
-                    <!-- Arrow Home <-> Grid -->
-                    <div class="flex flex-col items-center justify-center h-full">
-                        <div id="arrowGridToHome" class="hidden flex items-center">
-                            <span class="text-red-400 text-2xl">⬅️</span>
-                            <span class="text-red-400 text-xs ml-1" id="flowGridHomeVal">0W</span>
-                        </div>
-                        <div id="arrowHomeToGrid" class="hidden flex items-center">
-                            <span class="text-green-400 text-2xl">➡️</span>
-                            <span class="text-green-400 text-xs ml-1" id="flowHomeGridVal">0W</span>
-                        </div>
-                    </div>
-                    
-                    <!-- Grid -->
-                    <div class="flex flex-col items-center">
-                        <div id="gridIcon" class="w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30">
-                            <span class="text-3xl">⚡</span>
-                        </div>
-                        <div class="mt-2 text-lg font-bold" id="flowGrid">0 W</div>
-                        <div class="text-xs text-slate-400" id="flowGridLabel">Grid</div>
-                    </div>
-                    
                 </div>
                 
-                <!-- Flow Legend -->
-                <div class="flex justify-center gap-6 mt-4 text-xs text-slate-400">
-                    <span class="flex items-center gap-1"><span class="w-3 h-3 bg-yellow-400 rounded-full"></span> Solar</span>
-                    <span class="flex items-center gap-1"><span class="w-3 h-3 bg-green-400 rounded-full"></span> Export/Discharge</span>
-                    <span class="flex items-center gap-1"><span class="w-3 h-3 bg-red-400 rounded-full"></span> Import</span>
-                    <span class="flex items-center gap-1"><span class="w-3 h-3 bg-purple-400 rounded-full"></span> Consumption</span>
+                <!-- Legend -->
+                <div class="flex flex-wrap justify-center gap-4 mt-4 pt-4 border-t border-slate-700/50">
+                    <div class="flex items-center gap-2 text-xs">
+                        <div class="w-8 h-1 bg-yellow-400 rounded"></div>
+                        <span class="text-slate-400">Solar Power</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs">
+                        <div class="w-8 h-1 bg-green-400 rounded"></div>
+                        <span class="text-slate-400">Export / Discharge</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs">
+                        <div class="w-8 h-1 bg-red-400 rounded"></div>
+                        <span class="text-slate-400">Import from Grid</span>
+                    </div>
                 </div>
             </div>
             
@@ -818,58 +914,81 @@
         
         // Update flow arrows based on power values
         function updateFlowArrows(ppv, pbat, pgrid, pload) {
-            // Hide all arrows first
-            const arrows = ['arrowSolarBat', 'arrowSolarHome', 'arrowSolarGrid', 
-                           'arrowBatToHome', 'arrowHomeToBat', 'arrowGridToHome', 'arrowHomeToGrid'];
-            arrows.forEach(id => {
+            // Hide all flow lines and values first
+            const lines = ['lineSolarHome', 'lineSolarBattery', 'lineSolarGrid', 
+                          'lineBatteryHome', 'lineGridHome', 'lineHomeGrid', 'lineGridBattery'];
+            const vals = ['valSolarHome', 'valSolarBat', 'valSolarGrid', 
+                         'valBatHome', 'valGridHome', 'valHomeGrid'];
+            
+            lines.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+            vals.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.add('hidden');
             });
             
             // Solar generating (ppv > 0)
             if (ppv > 50) {
-                // Solar to Home
-                const solarToHome = Math.min(ppv, pload);
-                if (solarToHome > 50) {
-                    document.getElementById('arrowSolarHome').classList.remove('hidden');
-                    document.getElementById('flowSolarHomeVal').textContent = solarToHome + 'W';
+                // Solar to Home (always when solar is generating and home is consuming)
+                if (pload > 50) {
+                    const solarToHome = Math.min(ppv, pload);
+                    document.getElementById('lineSolarHome').classList.remove('hidden');
+                    document.getElementById('valSolarHome').classList.remove('hidden');
+                    document.getElementById('flowValSolarHome').textContent = solarToHome + 'W';
                 }
                 
-                // Solar to Battery (charging)
+                // Solar to Battery (battery is charging, pbat < 0)
                 if (pbat < -50) {
-                    document.getElementById('arrowSolarBat').classList.remove('hidden');
-                    document.getElementById('flowSolarBatVal').textContent = Math.abs(pbat) + 'W';
+                    document.getElementById('lineSolarBattery').classList.remove('hidden');
+                    document.getElementById('valSolarBat').classList.remove('hidden');
+                    document.getElementById('flowValSolarBat').textContent = Math.abs(pbat) + 'W';
                 }
                 
-                // Solar to Grid (exporting)
+                // Solar to Grid (exporting, pgrid < 0)
                 if (pgrid < -50) {
-                    document.getElementById('arrowSolarGrid').classList.remove('hidden');
-                    document.getElementById('flowSolarGridVal').textContent = Math.abs(pgrid) + 'W';
+                    document.getElementById('lineSolarGrid').classList.remove('hidden');
+                    document.getElementById('valSolarGrid').classList.remove('hidden');
+                    document.getElementById('flowValSolarGrid').textContent = Math.abs(pgrid) + 'W';
                 }
             }
             
-            // Battery discharging to home
+            // Battery discharging to home (pbat > 0)
             if (pbat > 50) {
-                document.getElementById('arrowBatToHome').classList.remove('hidden');
-                document.getElementById('flowBatHomeVal').textContent = pbat + 'W';
+                document.getElementById('lineBatteryHome').classList.remove('hidden');
+                document.getElementById('valBatHome').classList.remove('hidden');
+                document.getElementById('flowValBatHome').textContent = pbat + 'W';
             }
             
-            // Battery charging (shown as arrow from home side when no solar)
-            if (pbat < -50 && ppv < 100) {
-                document.getElementById('arrowHomeToBat').classList.remove('hidden');
-                document.getElementById('flowHomeBatVal').textContent = Math.abs(pbat) + 'W';
-            }
-            
-            // Grid importing to home
+            // Grid to Home (importing, pgrid > 0)
             if (pgrid > 50) {
-                document.getElementById('arrowGridToHome').classList.remove('hidden');
-                document.getElementById('flowGridHomeVal').textContent = pgrid + 'W';
+                document.getElementById('lineGridHome').classList.remove('hidden');
+                document.getElementById('valGridHome').classList.remove('hidden');
+                document.getElementById('flowValGridHome').textContent = pgrid + 'W';
             }
             
-            // Grid exporting (when no/low solar - from battery)
+            // Home to Grid (exporting without much solar - from battery)
             if (pgrid < -50 && ppv < 100) {
-                document.getElementById('arrowHomeToGrid').classList.remove('hidden');
-                document.getElementById('flowHomeGridVal').textContent = Math.abs(pgrid) + 'W';
+                document.getElementById('lineHomeGrid').classList.remove('hidden');
+                document.getElementById('valHomeGrid').classList.remove('hidden');
+                document.getElementById('flowValHomeGrid').textContent = Math.abs(pgrid) + 'W';
+            }
+            
+            // Grid charging battery (rare - when grid charges battery at night)
+            if (pbat < -50 && ppv < 100 && pgrid > 50) {
+                document.getElementById('lineGridBattery').classList.remove('hidden');
+            }
+            
+            // Update grid icon color based on import/export
+            const gridIcon = document.getElementById('gridIcon');
+            const exporting = pgrid < -50;
+            if (exporting) {
+                gridIcon.className = 'w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/40 border-2 border-green-400/30';
+            } else if (pgrid > 50) {
+                gridIcon.className = 'w-20 h-20 bg-gradient-to-br from-red-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg shadow-red-500/40 border-2 border-red-400/30';
+            } else {
+                gridIcon.className = 'w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/40 border-2 border-blue-400/30';
             }
         }
         
