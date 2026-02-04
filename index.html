@@ -429,6 +429,29 @@
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4" id="energyStats"></div>
             </div>
             
+            <!-- Lifetime Statistics -->
+            <div class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-3xl p-6 border border-slate-700/50">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold flex items-center gap-2">
+                        📊 Lifetime Statistics
+                        <span class="text-xs text-slate-500 font-normal">(Since Installation)</span>
+                    </h2>
+                    <span class="text-xs text-slate-500" id="installDate">--</span>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="lifetimeStats">
+                    <!-- Stats will be populated by JS -->
+                </div>
+                
+                <!-- Environmental Impact -->
+                <div class="mt-6 pt-4 border-t border-slate-700/50">
+                    <h3 class="text-sm font-medium text-slate-400 mb-3">🌍 Environmental Impact</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="environmentalStats">
+                        <!-- Stats will be populated by JS -->
+                    </div>
+                </div>
+            </div>
+            
             <!-- Battery SOC Chart -->
             <div class="bg-slate-800/50 backdrop-blur-xl rounded-3xl p-6 border border-slate-700/50">
                 <h2 class="text-lg font-semibold mb-4">Battery State of Charge (24h)</h2>
@@ -705,11 +728,13 @@
             try {
                 let result;
                 let historyResult;
+                let lifetimeResult;
                 
                 if (isDemo) {
                     await new Promise(r => setTimeout(r, 800));
                     result = generateDemoData();
                     historyResult = { success: true, data: result.data.historical };
+                    lifetimeResult = generateDemoLifetime();
                 } else {
                     // Get real-time data
                     console.log('Fetching real-time data...');
@@ -731,6 +756,16 @@
                     historyResult = await historyResponse.json();
                     console.log('History result:', historyResult);
                     console.log('History records count:', historyResult.data ? historyResult.data.length : 0);
+                    
+                    // Get lifetime statistics
+                    console.log('Fetching lifetime stats...');
+                    const lifetimeResponse = await fetch(scriptUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: JSON.stringify({ action: 'lifetime' })
+                    });
+                    lifetimeResult = await lifetimeResponse.json();
+                    console.log('Lifetime result:', lifetimeResult);
                 }
                 
                 if (result && result.success) {
@@ -747,11 +782,92 @@
                 } else {
                     console.log('No historical data to display');
                 }
+                
+                // Update lifetime statistics
+                if (lifetimeResult && lifetimeResult.success && lifetimeResult.data) {
+                    updateLifetimeStats(lifetimeResult.data);
+                }
             } catch (e) {
                 console.error('Error loading data:', e);
             }
             
             document.getElementById('loading').classList.add('hidden');
+        }
+        
+        // Generate demo lifetime stats
+        function generateDemoLifetime() {
+            return {
+                success: true,
+                data: {
+                    firstDate: '2024-01-15',
+                    lastDate: '2026-02-04',
+                    totalDays: 750,
+                    solarGeneration: 12500.5,
+                    gridImport: 1250.3,
+                    gridExport: 8500.2,
+                    homeConsumption: 5250.6,
+                    solarToHome: 4000.3,
+                    selfConsumption: 32.0,
+                    selfSufficiency: 76.2,
+                    co2Saved: 8750,
+                    treesEquivalent: 416.7,
+                    avgDailySolar: 16.7,
+                    avgDailyConsumption: 7.0
+                }
+            };
+        }
+        
+        // Update lifetime statistics display
+        function updateLifetimeStats(data) {
+            // Update install date
+            document.getElementById('installDate').textContent = 
+                'Since ' + data.firstDate + ' (' + data.totalDays + ' days)';
+            
+            // Format large numbers
+            function formatEnergy(value) {
+                if (value >= 1000) {
+                    return (value / 1000).toFixed(2) + ' MWh';
+                }
+                return value.toFixed(1) + ' kWh';
+            }
+            
+            // Main lifetime stats
+            const stats = [
+                { label: 'Total Solar Generated', value: formatEnergy(data.solarGeneration), icon: '☀️', color: 'yellow' },
+                { label: 'Solar Used at Home', value: formatEnergy(data.solarToHome), icon: '🏠', color: 'purple' },
+                { label: 'Exported to Grid', value: formatEnergy(data.gridExport), icon: '⬆️', color: 'green' },
+                { label: 'Imported from Grid', value: formatEnergy(data.gridImport), icon: '⬇️', color: 'red' },
+                { label: 'Total Home Consumption', value: formatEnergy(data.homeConsumption), icon: '🔌', color: 'blue' },
+                { label: 'Self-Sufficiency', value: data.selfSufficiency + '%', icon: '🎯', color: 'emerald' },
+                { label: 'Avg Daily Solar', value: data.avgDailySolar + ' kWh', icon: '📊', color: 'amber' },
+                { label: 'Avg Daily Usage', value: data.avgDailyConsumption + ' kWh', icon: '📈', color: 'cyan' }
+            ];
+            
+            document.getElementById('lifetimeStats').innerHTML = stats.map(s => `
+                <div class="bg-slate-700/40 rounded-xl p-4 border border-slate-600/30">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-xl">${s.icon}</span>
+                        <span class="text-xs text-slate-400">${s.label}</span>
+                    </div>
+                    <div class="text-xl font-bold text-${s.color}-400">${s.value}</div>
+                </div>
+            `).join('');
+            
+            // Environmental impact stats
+            const envStats = [
+                { label: 'CO₂ Saved', value: (data.co2Saved / 1000).toFixed(1) + ' tonnes', icon: '💨', color: 'green' },
+                { label: 'Trees Equivalent', value: Math.round(data.treesEquivalent) + ' trees/year', icon: '🌳', color: 'emerald' },
+                { label: 'Clean Energy Ratio', value: data.selfSufficiency + '%', icon: '♻️', color: 'teal' },
+                { label: 'Grid Independence', value: (100 - (data.gridImport / data.homeConsumption * 100)).toFixed(0) + '%', icon: '🔋', color: 'cyan' }
+            ];
+            
+            document.getElementById('environmentalStats').innerHTML = envStats.map(s => `
+                <div class="bg-green-900/20 rounded-xl p-3 border border-green-700/30 text-center">
+                    <span class="text-2xl">${s.icon}</span>
+                    <div class="text-lg font-bold text-${s.color}-400 mt-1">${s.value}</div>
+                    <div class="text-xs text-slate-400">${s.label}</div>
+                </div>
+            `).join('');
         }
         
         // Update charts with historical data from Google Sheets
