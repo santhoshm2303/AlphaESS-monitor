@@ -97,6 +97,19 @@
                            placeholder="https://script.google.com/macros/s/.../exec">
                 </div>
                 
+                <div>
+                    <label class="block text-sm text-slate-400 mb-2">Auto-Refresh Interval</label>
+                    <select id="refreshInterval" 
+                            class="w-full bg-slate-900/50 border border-slate-600 rounded-xl px-4 py-3 text-white focus:border-green-500 focus:ring-1 focus:ring-green-500 transition">
+                        <option value="0">Manual Only (No Auto-Refresh)</option>
+                        <option value="60000">Every 1 minute</option>
+                        <option value="300000">Every 5 minutes</option>
+                        <option value="600000">Every 10 minutes</option>
+                        <option value="1800000" selected>Every 30 minutes</option>
+                        <option value="3600000">Every 1 hour</option>
+                    </select>
+                </div>
+                
                 <button onclick="connect()" 
                         class="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold py-3 rounded-xl hover:from-green-600 hover:to-emerald-700 transition transform hover:scale-[1.02]">
                     Connect to System
@@ -467,11 +480,15 @@
         let logs = [];
         let powerChart, energyChart, socChart;
         let historicalData = [];
+        let refreshTimer = null;
         
         // Initialize
         window.onload = () => {
-            const saved = localStorage.getItem('alpha_script_url');
-            if (saved) document.getElementById('scriptUrl').value = saved;
+            const savedUrl = localStorage.getItem('alpha_script_url');
+            if (savedUrl) document.getElementById('scriptUrl').value = savedUrl;
+            
+            const savedInterval = localStorage.getItem('alpha_refresh_interval');
+            if (savedInterval) document.getElementById('refreshInterval').value = savedInterval;
         };
         
         function connect() {
@@ -481,6 +498,10 @@
                 return;
             }
             localStorage.setItem('alpha_script_url', scriptUrl);
+            
+            const refreshInterval = document.getElementById('refreshInterval').value;
+            localStorage.setItem('alpha_refresh_interval', refreshInterval);
+            
             isDemo = false;
             showDashboard();
         }
@@ -496,8 +517,27 @@
             document.getElementById('dashboard').classList.remove('hidden');
             initCharts();
             loadData();
-            // Auto refresh every 30 minutes (1800000 ms)
-            setInterval(loadData, 1800000);
+            
+            // Set up auto refresh based on user selection
+            const interval = parseInt(localStorage.getItem('alpha_refresh_interval') || '1800000');
+            if (interval > 0) {
+                refreshTimer = setInterval(loadData, interval);
+                updateRefreshStatus(interval);
+            } else {
+                updateRefreshStatus(0);
+            }
+        }
+        
+        function updateRefreshStatus(intervalMs) {
+            const badge = document.getElementById('statusBadge');
+            if (intervalMs === 0) {
+                badge.innerHTML = '<span class="w-2 h-2 bg-yellow-400 rounded-full"></span><span>Manual</span>';
+                badge.className = 'flex items-center gap-2 bg-yellow-500/20 text-yellow-400 px-3 py-1.5 rounded-full text-sm';
+            } else {
+                const mins = intervalMs / 60000;
+                badge.innerHTML = '<span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span><span>Auto ' + mins + 'm</span>';
+                badge.className = 'flex items-center gap-2 bg-green-500/20 text-green-400 px-3 py-1.5 rounded-full text-sm';
+            }
         }
         
         // Initialize Charts
